@@ -1,30 +1,36 @@
 # asmview
 
-`asmview` 是一个轻量的本地 Web 工具，用于在 x86/x64 Intel 汇编与机器码之间快速转换，并辅助查看控制流、坏字符、栈帧布局和字符串编码结果。
+**English** | [简体中文](README.zh-CN.md)
 
-服务只监听 `127.0.0.1`，无需前端构建，也不会把输入内容发送到外部服务。
+`asmview` is a lightweight local web tool for converting between x86/x64 Intel assembly and machine code. It also helps visualize control flow, highlight bad characters, map stack frames, and encode strings.
 
-## 功能
+The server listens only on `127.0.0.1`. It requires no frontend build step and does not send your input to any external service.
 
-- 支持 x86-32 和 x86-64。
-- 汇编转机器码、机器码反汇编，并可自动识别输入类型。
-- 支持标签、常见 Intel 指令和 `.byte`、`.ascii`、`.asciz`、`.string`、`db/dw/dd/dq` 数据指令。
-- 在反汇编列表中绘制分支跳转箭头，区分 `call`、无条件跳转和条件跳转。
-- 按自定义列表高亮坏字符，默认高亮 `00`、`0a`、`0d`。
-- 输出 `.byte`、`db`、连续十六进制、`\\xNN` 和逗号分隔等多种格式。
-- 栈帧工具：根据字段大小和基址寄存器生成偏移表、内存操作数和可复制报告。
-- 字符串工具：在文本、`push imm32`、`mov [reg+off], imm32`、十六进制转义和字节数组之间互转。
-- 可拖动调整面板尺寸，布局会保存在浏览器本地存储中。
+![asmview screenshot](docs/asmview.png)
 
-## 环境要求
+## Features
 
-- Python 3.9 或更高版本
+- Supports x86-32 and x86-64.
+- Converts assembly to machine code and machine code to assembly, with automatic input detection.
+- Supports labels, common Intel instructions, and `.byte`, `.ascii`, `.asciz`, `.string`, and `db/dw/dd/dq` data directives.
+- Draws branch arrows in disassembly listings, with distinct styles for calls, unconditional jumps, and conditional jumps.
+- Highlights configurable bad characters; defaults to `00`, `0a`, and `0d`.
+- Produces `.byte`, `db`, compact hex, `\\xNN`, and comma-separated output.
+- Maps stack-frame fields to offsets and Intel memory operands, with copyable reports.
+- Converts between text, `push imm32`, `mov [reg+off], imm32`, escaped hex, and byte arrays.
+- Provides resizable panels and saves the layout in browser local storage.
+
+## Requirements
+
+- Python 3.9 or later
 - Capstone
 - Keystone Engine
 
-## 安装
+## Installation
 
-建议使用虚拟环境：
+Using a virtual environment is recommended.
+
+Windows PowerShell:
 
 ```powershell
 git clone https://github.com/longbenx/asmview.git
@@ -34,7 +40,7 @@ python -m venv .venv
 python -m pip install -r requirements.txt
 ```
 
-Linux/macOS：
+Linux/macOS:
 
 ```bash
 git clone https://github.com/longbenx/asmview.git
@@ -44,29 +50,23 @@ source .venv/bin/activate
 python -m pip install -r requirements.txt
 ```
 
-## 启动
+## Running
 
 ```bash
 python asmview.py
 ```
 
-终端出现下面的提示后，在浏览器打开对应地址：
-
-```text
-Open http://127.0.0.1:8765
-```
-
-如需更换端口：
+Then open `http://127.0.0.1:8765` in your browser. To use a different port:
 
 ```bash
 python asmview.py --port 9000
 ```
 
-## 使用方法
+## Usage
 
-### 汇编转机器码
+### Assembly to machine code
 
-选择 `x86-32` 或 `x86-64`，将 `mode` 设为 `asm -> bytes`（也可以保留 `auto`），在左侧输入：
+Select `x86-32` or `x86-64`, set `mode` to `asm -> bytes` (or keep `auto`), and enter assembly in the left pane:
 
 ```asm
 start:
@@ -75,9 +75,9 @@ start:
     jmp start
 ```
 
-右侧会实时显示地址、机器码、分支箭头和反汇编结果。底部同时给出多种机器码格式；点击 `copy .byte` 可复制 `.byte` 行。
+The right pane updates live with addresses, machine code, branch arrows, and disassembly. Several byte formats are included at the bottom. Use `copy .byte` to copy the `.byte` line.
 
-也可以混合数据指令：
+Instructions and data directives can be mixed:
 
 ```asm
 xor eax, eax
@@ -85,29 +85,23 @@ xor eax, eax
 .byte 0x90, 0xcc
 ```
 
-### 机器码反汇编
+### Machine code to assembly
 
-将 `mode` 设为 `bytes -> asm`，或在 `auto` 模式直接输入以下任一形式：
+Set `mode` to `bytes -> asm`, or paste any supported format while using `auto`:
 
 ```text
 31 c0 50 c3
 31c050c3
-\\x31\\xc0\\x50\\xc3
+\x31\xc0\x50\xc3
 0x31, 0xc0, 0x50, 0xc3
 .byte 0x31, 0xc0, 0x50, 0xc3
 ```
 
-`base` 用于设置列表起始地址，例如 `0x401000`。`bad` 用于设置要高亮的字节，例如 `00,0a,0d,20`。
+Use `base` to set the listing origin, such as `0x401000`. Use `bad` to configure highlighted bytes, such as `00,0a,0d,20`.
 
-### 栈帧工具
+### Stack-frame tool
 
-点击 `frame` 打开栈帧面板。每行格式为：
-
-```text
-大小  名称  说明
-```
-
-空行、基址寄存器名、`pivot` 或分隔线表示栈帧指针位置。例如：
+Click `frame` to open the stack-frame panel. Each line uses the format `size name notes`. A blank line, the base-register name, or `pivot` marks the frame-pointer position:
 
 ```text
 4 ret  saved EIP
@@ -117,45 +111,39 @@ ebp
 8 info structure
 ```
 
-面板会生成相对 `ebp`/`rbp`（或自定义寄存器）的偏移和对应的 Intel 内存操作数。点击 `copy report` 可复制 Markdown 报告。
+The panel generates offsets relative to `ebp`, `rbp`, or a custom register, together with matching Intel memory operands. Use `copy report` to copy a Markdown report.
 
-### 字符串工具
+### String tool
 
-点击 `string` 打开字符串面板。可输入普通字符串，也可粘贴已有的 `push`、`mov` 或字节数组：
+Click `string` and enter plain text or paste existing `push`, `mov`, or byte-array code. The tool generates:
 
-```text
-cmd.exe
-```
+- Little-endian `push imm32` instructions.
+- `mov dword ptr [...]` instructions using the selected register and offset.
+- Decimal and hexadecimal byte arrays.
+- `\\xNN` escapes and space-separated hexadecimal bytes.
 
-工具会同时生成：
+The `nul` option appends a null byte to plain strings. `reg` and `off` control the generated `mov` destination.
 
-- 按小端序排列的 `push imm32`；
-- 写入指定寄存器和偏移的 `mov dword ptr [...]`；
-- 十进制/十六进制字节数组；
-- `\\xNN` 转义和空格分隔十六进制。
-
-`nul` 控制是否给普通字符串追加空字节，`reg` 和 `off` 控制生成的 `mov` 目标位置。
-
-## 命令行参数
+## Command-line options
 
 ```text
 usage: asmview.py [-h] [--port PORT]
 
 options:
-  -h, --help   显示帮助
-  --port PORT  本地 HTTP 端口，默认 8765
+  -h, --help   show help
+  --port PORT  local HTTP port (default: 8765)
 ```
 
-## 测试
+## Tests
 
-安装依赖后，可运行内置的冒烟测试：
+After installing the dependencies, run the built-in smoke tests:
 
 ```bash
 python -m unittest discover -s tests -v
 ```
 
-## 注意事项
+## Notes
 
-- 当前只支持 x86-32 与 x86-64，不支持 ARM 等架构。
-- 汇编语法以 Keystone 支持的 Intel 语法为准。
-- 这是本地分析辅助工具；浏览器页面不包含身份认证，请勿自行改为监听公网地址。
+- Only x86-32 and x86-64 are currently supported; ARM is not supported.
+- Assembly syntax follows the Intel syntax supported by Keystone.
+- The browser page has no authentication. Do not expose the server to a public interface without adding appropriate protection.
